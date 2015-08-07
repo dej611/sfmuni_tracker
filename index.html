@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BART Realtime routes</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <style>
+      
+      body {
+        background-color: rgb(174,209,255);
+      }
+
+      #panel {
+        background-color: white;
+      }
+
+      #streets path {
+        stroke: rgb(200,200,200);
+        fill: rgb(245,243,238);
+      }
+
+      #arteries path, #freeways path {
+        stroke: rgb(127,127,127);
+        stroke-width: 2px;
+        fill: rgb(245,243,238);
+      }
+
+      #neighborhoods path {
+        fill: rgb(245,243,238);
+        stroke: gray;
+      }
+
+      g.routeDots circle {
+        opacity: 0.3;
+        r: 7;
+        transition: r 2s 0.5s ease;
+        stroke: black;
+      }
+
+      g.legendDots circle {
+        r: 15;
+        opacity: 0.8;
+        stroke: black;
+      }
+
+      g.routeDots text {
+        text-anchor: middle;
+        font-size: 5px;
+        y: 2;
+        transition: font-size 2s 0.5s ease;
+        fill: white;
+      }
+
+      g.legendDots text {
+        font-size: 10px;
+        text-anchor: middle;
+        y: 5;
+        fill: white;
+      }
+
+      .fading {
+        opacity: 0.1;
+      }
+
+      g.routeDots.active circle {
+        opacity: 0.8;
+        r: 15;
+      }
+      g.routeDots.active text {
+        y: 5;
+        font-size: 10px;
+        font-weight: bold;
+      }
+
+      g.paths path {
+        opacity: 0.2;
+        transition: r 2s 0.5s ease;
+        fill: rgba(0,0,0,0);
+      }
+      g.paths path.active {
+        opacity: 0.8;
+        stroke-width: 6px;
+      }
+
+      .fixed-height {
+        overflow-y: auto;
+        min-height: 900px;
+      }
+
+      #filter-panel {
+        margin-top: 50px;
+      }
+    </style>
+  </head>
+  <body>
+  	<div class="container-fluid">
+  		<div class="row">
+  			<div class="col-md-8" id="map"></div>
+  			<div class="col-md-4 fixed-height" id="panel">
+          <div id="filter-panel">
+            <h1>SF Muni Tracker</h1>
+            <p>Watch the GPS tracking of the SF Muni bus fleet</p>
+            <div>
+              <div id="progress-data">
+                <div class="row">
+                  <div class="col-md-4">
+                    <label>Loading Data:</label>
+                  </div>
+                  <div class="col-md-8">
+                    <div class="progress">
+                      <div id="progress-bar" class="progress-bar progress-bar-success" role="progressbar" style="width: 0%"> 0%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <legend>Layers Filter</legend>
+            <div class="btn-group btn-group-block" role="group" >
+              <button type="button" class="btn btn-default layer-filter">Streets</button>
+              <button type="button" class="btn btn-default layer-filter">Arteries</button>
+              <button type="button" class="btn btn-default layer-filter">Freeways</button>
+            </div>
+            <div style="margin-top: 30px;">
+              <legend>Route Filter</legend>
+              <div class="col-md-12">
+                <form class="form-group">
+                  <label>Type one or more route numbers to highlight them on the map</label>
+                  <input type="text" class="form-control" id="routeId" placeholder="e.g. 8ax 21 kt m">
+                </form>
+              </div>
+            </div>
+            <div style="margin-top: 30px;">
+              <div class="col-md-12">
+              <label>Or just hover them here:</label>
+              <div id="legend"></div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.js"></script>
+    <script src="d3.promise.min.js"></script>
+    <script src="map.js"></script>
+  </body>
+</html>
