@@ -279,6 +279,7 @@ function drawDots(geoJSON){
 
     dots
       .append('circle')
+      .attr('r', 7)
       .style('fill', function(d){
         return '#' + (routeLookup[d.properties.route] && routeLookup[d.properties.route].color || 'FFFFFF');
       });
@@ -313,7 +314,8 @@ function highlightLines(lookup){
   svg.selectAll('g.routeDots').each(function (p){
     d3.select(this)
       .classed('active', p.properties.route in lookup)
-      .classed('hidden', !(p.properties.route in lookup));
+      .classed('hidden', !(p.properties.route in lookup))
+      .attr('r', p.properties.route in lookup ? 15 : 7);
   });
   svg.selectAll('g.paths path').classed('active', function (p){
     //match by route tag
@@ -323,7 +325,7 @@ function highlightLines(lookup){
 
 function restoreLines(){
   // remove all highlights
-  svg.selectAll('g.routeDots').classed('active hidden', false);
+  svg.selectAll('g.routeDots').classed('active hidden', false).attr('r', 7);
   svg.selectAll('g.paths path').classed('active', false);
 }
 
@@ -462,6 +464,7 @@ function createRouteLegend(){
      }).on('mouseleave', restoreLines);
 
   legend.append('circle')
+      .attr('r', 15)
       .style('fill', function (d){
         return '#' + (routeLookup[d.id] && routeLookup[d.id].color || 'FFFFFF');
       });
