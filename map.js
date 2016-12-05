@@ -9,7 +9,12 @@ var width = map.node().clientWidth,
 var svg = map
           .append('svg')
           .attr('width', width)
-          .attr('height', height);
+          .attr('height', height)
+          // Add zoom and pan
+          .call(d3.behavior.zoom().on("zoom", function () {
+            svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+          }))
+          .append('g').attr('id', '#container');
 
 var projection, path;
 
@@ -80,12 +85,10 @@ function updateProgress(delta){
     .select('#progress-bar')
     .style('width', progress + '%')
     .text(!completed ? progress + '%' : 'Completed!');
-  
+
   if(completed){
     // its a bit brutal but it's ok for now
-    // setTimeout(function(){
-      d3.select('#progress-data').transition().duration(1000).style('opacity', '0');
-    // }, 1000);
+    d3.select('#progress-data').transition().duration(1000).style('opacity', '0');
   }
 }
 
@@ -94,7 +97,8 @@ function bindUI(){
 
   var debounceKeyboard = debounce(onKeyUp, 50);
 
-  d3.select('#routeId').on('input', debounceKeyboard, false);
+  d3.select('#routeId')
+    .on('input', debounceKeyboard, false);
 }
 
 
@@ -131,6 +135,7 @@ function onKeyUp(){
   } else {
     restoreLines();
   }
+
 }
 
 function doFiltering(){
@@ -148,7 +153,7 @@ function doFiltering(){
 }
 
 function filterLayer(){
-  // for each layer 
+  // for each layer
   layers.forEach(function (layerId){
     d3.select('#'+layerId).classed('hidden', function (){
       return hiddenLayers.indexOf(layerId) > -1;
@@ -166,7 +171,7 @@ function workoutProjection(geoJSON){
   // create the path
   path = d3.geo.path().projection(projection);
 
-  // using the path determine the bounds of the current map and use 
+  // using the path determine the bounds of the current map and use
   // these to determine better values for the scale and translation
   var bounds  = path.bounds(geoJSON);
   var hscale  = scale*width  / (bounds[1][0] - bounds[0][0]);
@@ -216,7 +221,7 @@ function getVehiclePositions(time){
         positions = positions.concat(linePos);
 
         var time = + d3.select(data).select('lastTime').attr('time');
-        
+
         max = Math.max(max, time);
         min = Math.min(min, time);
       });
@@ -234,7 +239,7 @@ function getPositions(data){
     .selectAll('vehicle')
     .each(function(){
       var vehicle = d3.select(this);
-      
+
       points.push({
         type: 'Feature',
         properties:{
@@ -252,7 +257,7 @@ function getPositions(data){
 }
 
 function drawDots(geoJSON){
-  
+
   // update elements as needed
   var dots = svg.select('g.routes').selectAll('g.routeDots')
             .data(geoJSON.features, function (d){ return d.properties.id; });
@@ -264,7 +269,7 @@ function drawDots(geoJSON){
       .attr('transform', function (d){
         return 'translate('+(width/2)+','+(height/2)+')';
       });
-      
+
   // Now update the positions
   dots.transition('linear').duration(loaded ? timeWindow - 500 : 1000)
       .attr('transform', function (d){
@@ -289,7 +294,7 @@ function drawDots(geoJSON){
       .text(function(d){ return d.properties.route; });
 
     // Do not make people hover a 5px circle... bind the g element
-    svg.selectAll('g.routeDots').on('mouseover', function (d){
+    svg.selectAll('g.routeDots').on('mouseenter', function (d){
       var id = d.properties.id;
       var route = d.properties.route;
       svg.selectAll('g.routeDots').each(function (p){
@@ -329,11 +334,27 @@ function restoreLines(){
   svg.selectAll('g.paths path').classed('active', false);
 }
 
+function getRouteList(){
+  return d3.promise
+    .xml('http://webservices.nextbus.com/service/publicXMLFeed?command=routeList&a=sf-muni')
+    .catch(function(){
+      console.log(arguments);
+    });
+}
+
+function getRoutePaths(){
+  return d3.promise
+    .xml('http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=sf-muni')
+    .catch(function(){
+      console.log(arguments);
+    });
+}
+
 function setupBusTracking(){
 
-  var routesList = d3.promise.xml('http://webservices.nextbus.com/service/publicXMLFeed?command=routeList&a=sf-muni');
+  var routesList = getRouteList();
   // This request does paging every 100 routes: sf muni has 84 lines so it should be fine
-  var routesPaths = d3.promise.xml('http://webservices.nextbus.com/service/publicXMLFeed?command=routeConfig&a=sf-muni');
+  var routesPaths = getRoutePaths();
 
   routesList
     .then(function (data){
@@ -351,7 +372,7 @@ function setupBusTracking(){
       return routesPaths;
     })
     .then(function (data){
-      
+
       doRoutesPaths(data);
 
       updateProgress(7);
@@ -411,7 +432,7 @@ function doRoutesPaths(data){
         .selectAll('path')
         .each(function(){
           var feature = [];
-          
+
           d3.select(this).selectAll('point').each(function(){
             var point = d3.select(this);
             feature.push([ + point.attr('lon'), + point.attr('lat'), 0]);
